@@ -108,15 +108,12 @@ class ReservationList extends Component<ReservationListProps, State> {
 
   componentDidUpdate(prevProps: ReservationListProps) {
     if (this.props.topDay && prevProps.topDay) {
-      if (!sameDate(prevProps.topDay, this.props.topDay)) {
-        this.setState({reservations: []},
-          () => this.updateReservations(this.props, prevProps)
-        );
-      } else if (
-        this.props.items !== prevProps.items ||
-        !sameDate(this.props.selectedDay, prevProps.selectedDay)
-      ) {
-        this.updateReservations(this.props, prevProps);
+      if (this.props.showOnlySelectedDayItems !== prevProps.showOnlySelectedDayItems || this.props.items !== prevProps.items || !sameDate(this.props.selectedDay, prevProps.selectedDay)) {
+        if (!sameDate(prevProps.topDay, this.props.topDay)) {
+          this.setState({ reservations: [] }, () => this.updateReservations(this.props));
+        } else {
+          this.updateReservations(this.props);
+        }
       }
     }
   }
@@ -125,26 +122,21 @@ class ReservationList extends Component<ReservationListProps, State> {
     this.setState({reservations});
   }
 
-  updateReservations(props: ReservationListProps, prevProps: ReservationListProps) {
+  updateReservations(props: ReservationListProps) {
     const {selectedDay, showOnlySelectedDayItems} = props;
-    const reservationsData = this.getReservations(props);
-    const newReservations = reservationsData.reservations;
+    const reservations = this.getReservations(props);
     
     if (!showOnlySelectedDayItems && this.list && !sameDate(selectedDay, this.selectedDay)) {
       let scrollPosition = 0;
-      for (let i = 0; i < reservationsData.scrollPosition; i++) {
+      for (let i = 0; i < reservations.scrollPosition; i++) {
         scrollPosition += this.heights[i] || 0;
       }
       this.scrollOver = false;
       this.list?.current?.scrollToOffset({offset: scrollPosition, animated: true});
     }
 
-     if (!this.state.reservations || !this.state.reservations.length || !newReservations.length || JSON.stringify(this.state.reservations) !== JSON.stringify(newReservations)) {
-      this.selectedDay = selectedDay;
-      this.updateDataSource(newReservations);
-    } else {
-      this.selectedDay = selectedDay;
-    }
+    this.selectedDay = selectedDay;
+    this.updateDataSource(reservations.reservations);
   }
 
   getReservationsForDay(iterator: XDate, props: ReservationListProps) {
